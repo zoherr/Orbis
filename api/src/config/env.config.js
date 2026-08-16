@@ -12,7 +12,8 @@ const env = {
     SMTP_PASS: process.env.SMTP_PASS,
     SMTP_SECURE: process.env.SMTP_SECURE,
     RABBITMQ_URL: process.env.RABBITMQ_URL,
-    JWT_SECRET: process.env.JWT_SECRET
+    JWT_SECRET: process.env.JWT_SECRET,
+    JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET
 }
 
 export default env;

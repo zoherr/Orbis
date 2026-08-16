@@ -5,10 +5,43 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import ejs from "ejs";
 import { queueEmail } from "./email.service.js";
-import { signToken, verifyToken } from "../utils/jwt.js";
+import { signRefreshToken, signToken, verifyToken } from "../utils/jwt.js";
+import bcrypt from "bcryptjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const REFRESH_TOKEN_TTL = 7 * 24 * 60 * 60;
+
+const hashToken = (token) => {
+    return crypto
+        .createHash("sha256")
+        .update(token)
+        .digest("hex");
+};
+
+const createRefreshSession = async (userId) => {
+    const sessionId = crypto.randomUUID();
+
+    const refreshToken = signRefreshToken({
+        userId: userId.toString(),
+        sessionId,
+    });
+
+    const tokenHash = hashToken(refreshToken);
+
+    await redis.set(
+        `refresh:${sessionId}`,
+        JSON.stringify({
+            userId: userId.toString(),
+            tokenHash,
+        }),
+        {
+            EX: REFRESH_TOKEN_TTL,
+        }
+    );
+
+    return refreshToken;
+};
 
 export const checkUserExist = async (email) => {
 
@@ -19,16 +52,42 @@ export const checkUserExist = async (email) => {
     return false;
 }
 
-export const registerUser = async (data) => {
-
+export const checkUserName = async (username) => {
+    const user = await UserModel.findOne({ username: username });
+    if (user) {
+        return true;
+    }
+    return false;
 }
+
+export const registerUser = async (
+    fullName,
+    email,
+    password,
+    username
+) => {
+    const salt = await bcrypt.genSalt(12);
+    const hashPassword = await bcrypt.hash(password, salt);
+
+    const user = await UserModel.create({
+        fullName,
+        email,
+        password: hashPassword,
+        username,
+    });
+
+    const refreshToken = await createRefreshSession(user._id);
+
+    return {
+        user,
+        refreshToken,
+    };
+};
 
 export const sendOtp = async (email) => {
     const otp = crypto.randomInt(100000, 1000000).toString();
 
-    const key = `otp:${email}`;
-
-    const activationToken = signToken({ email, otp }, { expiresIn: "10m" });;
+    const activationToken = signToken({ email, otp }, { expiresIn: "10m" });
 
     const templatePath = path.join(
         __dirname,
@@ -55,8 +114,58 @@ export const sendOtp = async (email) => {
 
 export const optVeified = (email, otp, activationToken) => {
     const decoded = verifyToken(activationToken);
+
+    if (!decoded || typeof decoded !== "object") {
+        return false;
+    }
+
     if (decoded.email !== email || decoded.otp !== otp) {
         return false;
     }
+
     return true;
-}
+};
+
+export const refreshUserSession = async (refreshToken) => {
+    const payload = verifyRefreshToken(refreshToken);
+
+    if (!payload) {
+        return null;
+    }
+
+    const { userId, sessionId } = payload;
+
+    if (!userId || !sessionId) {
+        return null;
+    }
+
+    const key = `refresh:${sessionId}`;
+
+    const session = await redis.get(key);
+
+    if (!session) {
+        return null;
+    }
+
+    const parsedSession = JSON.parse(session);
+
+    const tokenHash = hashToken(refreshToken);
+
+    if (parsedSession.tokenHash !== tokenHash) {
+        await redis.del(key);
+        return null;
+    }
+
+    const newRefreshToken = await createRefreshSession(userId);
+
+    await redis.del(key);
+
+    const accessToken = signAccessToken({
+        userId,
+    });
+
+    return {
+        accessToken,
+        refreshToken: newRefreshToken,
+    };
+};
