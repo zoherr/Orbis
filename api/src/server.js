@@ -1,7 +1,7 @@
 import app from "./app.js"
 import env from "./config/env.config.js"
 import connectDb from "./lib/connectDb.js";
-import { connectRabbitMQ } from "./utils/rabbitmq.js";
+import { connectRabbitMQ } from "./lib/rabbitmq.js";
 
 
 

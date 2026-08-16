@@ -6,8 +6,15 @@ import {
     registerUser,
     sendOtp,
     refreshUserSession,
+    loginUser,
+    getUserById,
+    passwordChange,
+    userForgotPassword,
 } from "../services/auth.service.js";
 import { signAccessToken } from "../utils/jwt.js";
+import { toPublicUser } from "../dtos/user.dto.js";
+import NotFound from "../exceptions/NotFound.js";
+import BadRequest from "../exceptions/BadRequest.js";
 
 export const initiateAuth = async (req, res, next) => {
     try {
@@ -97,7 +104,7 @@ export const userRegister = async (req, res, next) => {
         return res.status(201).json({
             success: true,
             message: "User registered successfully!",
-            user,
+            user: toPublicUser(user),
         });
     } catch (error) {
         next(error);
@@ -106,10 +113,40 @@ export const userRegister = async (req, res, next) => {
 
 export const userLogin = async (req, res, next) => {
     try {
-        res.json({
+        const {
+            email,
+            password
+        } = req.body;
+
+        const { user, refreshToken } = await loginUser(
+            email,
+            password,
+        );
+
+        const accessToken = signAccessToken({
+            userId: user._id.toString(),
+        });
+
+        res.cookie("accessToken", accessToken, {
+            httpOnly: true,
+            secure: env.NODE_ENV === "production",
+            sameSite: "strict",
+            maxAge: 15 * 60 * 1000,
+        });
+
+        res.cookie("refreshToken", refreshToken, {
+            httpOnly: true,
+            secure: env.NODE_ENV === "production",
+            sameSite: "strict",
+            maxAge: 7 * 24 * 60 * 60 * 1000,
+        });
+
+        return res.status(201).json({
             success: true,
-            message: "User Login Successfully!"
-        })
+            message: "User Login successfully!",
+            user: toPublicUser(user),
+        });
+
     } catch (error) {
         next(error);
     }
@@ -158,4 +195,75 @@ export const refreshAccessToken = async (req, res, next) => {
     } catch (error) {
         next(error);
     }
-};
+}
+
+export const getMe = async (req, res, next) => {
+    try {
+        const userId = req.userId;
+        const user = await getUserById(userId);
+
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User Not Found" });
+        }
+
+        return res.status(201).json({
+            success: true,
+            message: "User data fetch successfully!",
+            user: toPublicUser(user),
+        });
+    } catch (error) {
+        next(error);
+    }
+}
+
+export const changePassword = async (req, res, next) => {
+    try {
+        const { oldPassword, newPassword } = req.body;
+        const user = await passwordChange(req.userId, oldPassword, newPassword);
+        return res.status(200).json({
+            success: true,
+            message: "Change Password Successfully!"
+        })
+    } catch (error) {
+        next(error);
+    }
+}
+
+export const sendForgotPasswordOTP = async (req, res, next) => {
+    try {
+        const { email } = req.body;
+
+        const user = await checkUserExist(email);
+
+        if (!user) {
+            throw new NotFound("User Not Found")
+        }
+
+        const activationToken = await sendOtp(email);
+
+        return res.status(200).json({
+            success: true,
+            message: "Forgot Password OTP Sent Successfully!", 
+            activationToken
+        })
+
+    } catch (error) {
+        next(error)
+    }
+}
+
+export const forgotPassword = async (req, res, next) => {
+    try {
+        const { email, otp, activationToken, newPassword } = req.body;
+
+        await userForgotPassword(email, otp, activationToken, newPassword);
+
+        return res.status(200).json({
+            success: true,
+            message: "Password Changed Successfully!"
+        })
+
+    } catch (error) {
+        next(error);
+    }
+}

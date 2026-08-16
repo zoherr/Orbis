@@ -1,9 +1,9 @@
 import {
     connectRabbitMQ,
     consumeQueue
-} from "../utils/rabbitmq.js";
+} from "../lib/rabbitmq.js";
 
-import sendMail from "../utils/mailer.js";
+import sendMail from "../lib/mailer.js";
 import { QUEUES } from "../config/queues.config.js";
 
 const startEmailWorker = async () => {

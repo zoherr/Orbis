@@ -5,8 +5,10 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import ejs from "ejs";
 import { queueEmail } from "./email.service.js";
-import { signRefreshToken, signToken, verifyToken } from "../utils/jwt.js";
+import { signAccessToken, signRefreshToken, signToken, verifyRefreshToken, verifyToken } from "../utils/jwt.js";
 import bcrypt from "bcryptjs";
+import { deleteRedis, getRedis, setRedis } from "../utils/redis.js";
+import BadRequest from "../exceptions/BadRequest.js"
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -29,19 +31,23 @@ const createRefreshSession = async (userId) => {
 
     const tokenHash = hashToken(refreshToken);
 
-    await redis.set(
-        `refresh:${sessionId}`,
+
+    await setRedis(`refresh:${sessionId}`,
         JSON.stringify({
             userId: userId.toString(),
             tokenHash,
-        }),
-        {
-            EX: REFRESH_TOKEN_TTL,
-        }
-    );
+        }), REFRESH_TOKEN_TTL)
 
     return refreshToken;
 };
+
+export const getUserById = async (userId) => {
+    const user = await UserModel.findById(userId);
+    if (user) {
+        return user;
+    }
+    return false;
+}
 
 export const checkUserExist = async (email) => {
 
@@ -84,6 +90,30 @@ export const registerUser = async (
     };
 };
 
+export const loginUser = async (
+    email,
+    password
+) => {
+    const user = await checkUserExist(email);
+
+    if (!user) {
+        throw new BadRequest("User Not Found");
+    }
+
+    const checkPassword = await bcrypt.compare(password, user.password);
+
+    if (!checkPassword) {
+        throw new BadRequest("Wrong Password");
+    }
+
+    const refreshToken = await createRefreshSession(user._id);
+
+    return {
+        user,
+        refreshToken,
+    };
+};
+
 export const sendOtp = async (email) => {
     const otp = crypto.randomInt(100000, 1000000).toString();
 
@@ -115,11 +145,12 @@ export const sendOtp = async (email) => {
 export const optVeified = (email, otp, activationToken) => {
     const decoded = verifyToken(activationToken);
 
+    console.log(decoded)
     if (!decoded || typeof decoded !== "object") {
         return false;
     }
 
-    if (decoded.email !== email || decoded.otp !== otp) {
+    if (decoded.email !== email || decoded.otp !== otp.toString()) {
         return false;
     }
 
@@ -141,13 +172,13 @@ export const refreshUserSession = async (refreshToken) => {
 
     const key = `refresh:${sessionId}`;
 
-    const session = await redis.get(key);
+    const session = await getRedis(key);
 
     if (!session) {
         return null;
     }
 
-    const parsedSession = JSON.parse(session);
+    const parsedSession = session;
 
     const tokenHash = hashToken(refreshToken);
 
@@ -158,7 +189,7 @@ export const refreshUserSession = async (refreshToken) => {
 
     const newRefreshToken = await createRefreshSession(userId);
 
-    await redis.del(key);
+    await deleteRedis(key);
 
     const accessToken = signAccessToken({
         userId,
@@ -169,3 +200,49 @@ export const refreshUserSession = async (refreshToken) => {
         refreshToken: newRefreshToken,
     };
 };
+
+export const passwordChange = async (userId, oldPassword, newPassword) => {
+    const user = await UserModel.findById(userId);
+    if (!user) {
+        throw new BadRequest("User Not Found");
+    }
+
+    const checkPassword = await bcrypt.compare(oldPassword, user.password);
+
+    if (!checkPassword) {
+        throw new BadRequest("Wrong Password");
+    }
+
+    const salt = await bcrypt.genSalt(12);
+    const hashPassword = await bcrypt.hash(newPassword, salt);
+
+    user.password = hashPassword;
+    await user.save();
+
+}
+
+export const userForgotPassword = async (email, otp, activationToken, newPassword) => {
+
+    const isOtpCorrect = optVeified(
+        email,
+        otp,
+        activationToken
+    );
+
+    if (!isOtpCorrect) {
+        throw new BadRequest("OTP is Invalid Or Expired")
+    }
+
+    const user = await checkUserExist(email);
+
+    if (!user) {
+        throw new BadRequest("User Not Found");
+    }
+
+    const salt = await bcrypt.genSalt(12);
+    const hashPassword = await bcrypt.hash(newPassword, salt);
+
+    user.password = hashPassword;
+
+    await user.save();
+}

@@ -1,4 +1,4 @@
-import { sendToQueue } from "../utils/rabbitmq.js";
+import { sendToQueue } from "../lib/rabbitmq.js";
 import { QUEUES } from "../config/queues.config.js";
 
 export const queueEmail = async ({
