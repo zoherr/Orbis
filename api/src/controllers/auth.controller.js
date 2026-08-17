@@ -10,6 +10,7 @@ import {
     getUserById,
     passwordChange,
     userForgotPassword,
+    invalidateRefreshToken,
 } from "../services/auth.service.js";
 import { signAccessToken } from "../utils/jwt.js";
 import { toPublicUser } from "../dtos/user.dto.js";
@@ -243,7 +244,7 @@ export const sendForgotPasswordOTP = async (req, res, next) => {
 
         return res.status(200).json({
             success: true,
-            message: "Forgot Password OTP Sent Successfully!", 
+            message: "Forgot Password OTP Sent Successfully!",
             activationToken
         })
 
@@ -267,3 +268,32 @@ export const forgotPassword = async (req, res, next) => {
         next(error);
     }
 }
+
+export const logout = async (req, res, next) => {
+    try {
+        const refreshToken = req.cookies?.refreshToken;
+
+        if (refreshToken) {
+            await invalidateRefreshToken(refreshToken);
+        }
+
+        res.clearCookie("accessToken", {
+            httpOnly: true,
+            secure: env.NODE_ENV === "production",
+            sameSite: "strict",
+        });
+
+        res.clearCookie("refreshToken", {
+            httpOnly: true,
+            secure: env.NODE_ENV === "production",
+            sameSite: "strict",
+        });
+
+        return res.status(200).json({
+            success: true,
+            message: "Logout successfully!",
+        });
+    } catch (error) {
+        next(error);
+    }
+};

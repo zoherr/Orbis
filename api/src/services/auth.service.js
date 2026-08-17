@@ -145,7 +145,6 @@ export const sendOtp = async (email) => {
 export const optVeified = (email, otp, activationToken) => {
     const decoded = verifyToken(activationToken);
 
-    console.log(decoded)
     if (!decoded || typeof decoded !== "object") {
         return false;
     }
@@ -245,4 +244,29 @@ export const userForgotPassword = async (email, otp, activationToken, newPasswor
     user.password = hashPassword;
 
     await user.save();
+}
+
+export const invalidateRefreshToken = async (refreshToken) => {
+    const payload = verifyRefreshToken(refreshToken);
+
+    if (!payload) {
+        return null;
+    }
+
+    const { userId, sessionId } = payload;
+
+    if (!userId || !sessionId) {
+        return null;
+    }
+
+    const key = `refresh:${sessionId}`;
+
+    const session = await getRedis(key);
+
+    if (!session) {
+        return null;
+    }
+
+    await deleteRedis(key);
+
 }

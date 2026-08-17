@@ -13,7 +13,8 @@ const env = {
     SMTP_SECURE: process.env.SMTP_SECURE,
     RABBITMQ_URL: process.env.RABBITMQ_URL,
     JWT_SECRET: process.env.JWT_SECRET,
-    JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET
+    JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET,
+    CORS_FRONTNED_URL: process.env.CORS_FRONTNED_URL
 }
 
 export default env;

@@ -5,7 +5,7 @@ const authenticate = async (req, res, next) => {
     const accessToken = req.cookies?.accessToken;
 
     if (!accessToken) {
-        throw new Unauthorized("Access Token Required")
+        throw new Unauthorized("User is not authenticated")
     }
 
     const payload = verifyAccessToken(accessToken);
