@@ -1,0 +1,95 @@
+"use client";
+
+import { useEffect, useRef } from "react";
+import { Toaster, useToasterStore } from "react-hot-toast";
+
+export function AppToaster() {
+    const audioRef = useRef<HTMLAudioElement | null>(null);
+    const playedToastIdsRef = useRef<Set<string>>(new Set());
+    const { toasts } = useToasterStore();
+
+    useEffect(() => {
+        audioRef.current = new Audio("/sounds/notification.mp3");
+        audioRef.current.preload = "auto";
+
+        return () => {
+            audioRef.current = null;
+            playedToastIdsRef.current.clear();
+        };
+    }, []);
+
+    useEffect(() => {
+        const audio = audioRef.current;
+        if (!audio) {
+            return;
+        }
+
+        const nextVisibleIds = new Set<string>();
+
+        for (const toast of toasts) {
+            if (!toast.visible) {
+                continue;
+            }
+
+            nextVisibleIds.add(toast.id);
+
+            if (!playedToastIdsRef.current.has(toast.id)) {
+                audio.currentTime = 0;
+                void audio.play().catch(() => {
+                    // Ignore autoplay/user-gesture restrictions.
+                });
+            }
+        }
+
+        playedToastIdsRef.current = nextVisibleIds;
+    }, [toasts]);
+
+    return (
+        <Toaster
+            position="top-right"
+            reverseOrder={false}
+            gutter={10}
+            toastOptions={{
+                duration: 4000,
+                style: {
+                    background: "rgba(13, 23, 42, 0.92)",
+                    color: "#fff",
+                    borderRadius: "16px",
+                    border: "1px solid rgba(95, 163, 255, 0.25)",
+                    boxShadow: "0 20px 50px rgba(8, 75, 167, 0.25)",
+                    backdropFilter: "blur(12px)",
+                    padding: "12px 16px",
+                    fontSize: "14px",
+                    fontWeight: 500,
+                    maxWidth: "380px",
+                },
+                success: {
+                    style: {
+                        border: "1px solid rgba(211, 246, 37, 0.35)",
+                        boxShadow: "0 20px 50px rgba(211, 246, 37, 0.15)",
+                    },
+                    iconTheme: {
+                        primary: "#d3f625",
+                        secondary: "#0d172a",
+                    },
+                },
+                error: {
+                    style: {
+                        border: "1px solid rgba(229, 72, 77, 0.35)",
+                        boxShadow: "0 20px 50px rgba(229, 72, 77, 0.15)",
+                    },
+                    iconTheme: {
+                        primary: "#ff6b6f",
+                        secondary: "#0d172a",
+                    },
+                },
+                loading: {
+                    iconTheme: {
+                        primary: "#5fa3ff",
+                        secondary: "#0d172a",
+                    },
+                },
+            }}
+        />
+    );
+}
