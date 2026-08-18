@@ -31,7 +31,6 @@ export const sendForgotPasswordOTPSchema = z.object({
     email: z.email()
 })
 
-
 export const forgotPasswordSchema = z.object({
     email: z.email(),
     newPassword: z.string().trim().min(8).max(20),
@@ -39,3 +38,10 @@ export const forgotPasswordSchema = z.object({
     activationToken: z.string()
 });
 
+export const checkUsername = z.object({
+    username: z.string().trim().min(5).max(20)
+})
+
+export const resendOTPSchema = z.object({
+    email: z.email()
+});

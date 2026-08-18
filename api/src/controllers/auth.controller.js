@@ -11,6 +11,7 @@ import {
     passwordChange,
     userForgotPassword,
     invalidateRefreshToken,
+    checkUserNameAvailablity,
 } from "../services/auth.service.js";
 import { signAccessToken } from "../utils/jwt.js";
 import { toPublicUser } from "../dtos/user.dto.js";
@@ -119,6 +120,8 @@ export const userLogin = async (req, res, next) => {
             password
         } = req.body;
 
+        
+        
         const { user, refreshToken } = await loginUser(
             email,
             password,
@@ -297,3 +300,44 @@ export const logout = async (req, res, next) => {
         next(error);
     }
 };
+
+
+export const checkUserNameAvailable = async (req, res, next) => {
+    try {
+        const { username } = req.query;
+
+        let userid = req?.userId;
+        let isExist = await checkUserNameAvailablity(username, userid);
+        if (isExist) {
+            return res.status(200).json({
+                success: true,
+                available: false
+            })
+        }
+
+        return res.status(200).json({
+            success: true,
+            available: true
+        })
+
+    } catch (error) {
+        next(error)
+    }
+}
+
+export const reSendOTP = async (req, res, next) => {
+    try {
+        const { email } = req.body;
+
+        const activationToken = await sendOtp(email);
+
+        return res.status(200).json({
+            success: true,
+            message: " OTP Sent Successfully!",
+            activationToken
+        })
+
+    } catch (error) {
+        next(error);
+    }
+}

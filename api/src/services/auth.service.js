@@ -5,20 +5,24 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import ejs from "ejs";
 import { queueEmail } from "./email.service.js";
-import { signAccessToken, signRefreshToken, signToken, verifyRefreshToken, verifyToken } from "../utils/jwt.js";
+import {
+    signAccessToken,
+    signRefreshToken,
+    signToken,
+    verifyRefreshToken,
+    verifyToken,
+} from "../utils/jwt.js";
 import bcrypt from "bcryptjs";
 import { deleteRedis, getRedis, setRedis } from "../utils/redis.js";
-import BadRequest from "../exceptions/BadRequest.js"
+import BadRequest from "../exceptions/BadRequest.js";
+import RateLimitException from "../exceptions/RateLimit.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const REFRESH_TOKEN_TTL = 7 * 24 * 60 * 60;
 
 const hashToken = (token) => {
-    return crypto
-        .createHash("sha256")
-        .update(token)
-        .digest("hex");
+    return crypto.createHash("sha256").update(token).digest("hex");
 };
 
 const createRefreshSession = async (userId) => {
@@ -31,12 +35,14 @@ const createRefreshSession = async (userId) => {
 
     const tokenHash = hashToken(refreshToken);
 
-
-    await setRedis(`refresh:${sessionId}`,
+    await setRedis(
+        `refresh:${sessionId}`,
         JSON.stringify({
             userId: userId.toString(),
             tokenHash,
-        }), REFRESH_TOKEN_TTL)
+        }),
+        REFRESH_TOKEN_TTL,
+    );
 
     return refreshToken;
 };
@@ -47,31 +53,27 @@ export const getUserById = async (userId) => {
         return user;
     }
     return false;
-}
+};
 
 export const checkUserExist = async (email) => {
-
     const user = await UserModel.findOne({ email: email });
     if (user) {
         return user;
     }
     return false;
-}
+};
 
 export const checkUserName = async (username) => {
-    const user = await UserModel.findOne({ username: username });
+    const user = await UserModel.findOne({ username: username })
+        .select("_id")
+        .lean();
     if (user) {
         return true;
     }
     return false;
-}
+};
 
-export const registerUser = async (
-    fullName,
-    email,
-    password,
-    username
-) => {
+export const registerUser = async (fullName, email, password, username) => {
     const salt = await bcrypt.genSalt(12);
     const hashPassword = await bcrypt.hash(password, salt);
 
@@ -90,10 +92,7 @@ export const registerUser = async (
     };
 };
 
-export const loginUser = async (
-    email,
-    password
-) => {
+export const loginUser = async (email, password) => {
     const user = await checkUserExist(email);
 
     if (!user) {
@@ -115,13 +114,27 @@ export const loginUser = async (
 };
 
 export const sendOtp = async (email) => {
+    const cooldownKey = `otp:cooldown:${email}`;
+
+    const existingCooldown = await getRedis(cooldownKey);
+
+    if (existingCooldown) {
+        const ttl = await redis.ttl(cooldownKey);
+
+        if (ttl > 0) {
+            throw new RateLimitException(
+                `Please wait ${ttl} seconds before requesting another OTP`
+            );
+        }
+    }
+
     const otp = crypto.randomInt(100000, 1000000).toString();
 
     const activationToken = signToken({ email, otp }, { expiresIn: "10m" });
 
     const templatePath = path.join(
         __dirname,
-        "../templates/emails/otp-verification.ejs"
+        "../templates/emails/otp-verification.ejs",
     );
 
     const html = await ejs.renderFile(templatePath, {
@@ -130,14 +143,16 @@ export const sendOtp = async (email) => {
         appName: "Orbis",
         domain: "orbis.app",
         expiryMinutes: 10,
-        supportEmail: "support@orbis.app"
+        supportEmail: "support@orbis.app",
     });
 
     await queueEmail({
         to: email,
         subject: "Your Orbis.app verification code",
-        html
+        html,
     });
+
+    await setRedis(cooldownKey, "1", 60);
 
     return activationToken;
 };
@@ -217,19 +232,18 @@ export const passwordChange = async (userId, oldPassword, newPassword) => {
 
     user.password = hashPassword;
     await user.save();
+};
 
-}
-
-export const userForgotPassword = async (email, otp, activationToken, newPassword) => {
-
-    const isOtpCorrect = optVeified(
-        email,
-        otp,
-        activationToken
-    );
+export const userForgotPassword = async (
+    email,
+    otp,
+    activationToken,
+    newPassword,
+) => {
+    const isOtpCorrect = optVeified(email, otp, activationToken);
 
     if (!isOtpCorrect) {
-        throw new BadRequest("OTP is Invalid Or Expired")
+        throw new BadRequest("OTP is Invalid Or Expired");
     }
 
     const user = await checkUserExist(email);
@@ -244,7 +258,7 @@ export const userForgotPassword = async (email, otp, activationToken, newPasswor
     user.password = hashPassword;
 
     await user.save();
-}
+};
 
 export const invalidateRefreshToken = async (refreshToken) => {
     const payload = verifyRefreshToken(refreshToken);
@@ -268,5 +282,12 @@ export const invalidateRefreshToken = async (refreshToken) => {
     }
 
     await deleteRedis(key);
+};
 
-}
+export const checkUserNameAvailablity = async (username, userid) => {
+    const query = userid ? { username, _id: { $ne: userid } } : { username };
+
+    const user = await UserModel.findOne(query).select("_id").lean();
+
+    return !!user;
+};

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import authStore from "@/store/authStore";
 import { FormField } from "../ui/FormField";
 import { OtpInput } from "../ui/OtpInput";
@@ -15,7 +15,9 @@ export function ResetPasswordStep({ email, onSuccess }: ResetPasswordStepProps) 
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [fieldError, setFieldError] = useState<string | null>(null);
-  const { forgotPassword, isLoading, error, clearError } = authStore();
+  const { forgotPassword, isLoading, error, clearError, reSendOTP, activationToken } = authStore();
+
+  const [secondsLeft, setSecondsLeft] = useState<number>(() => (activationToken ? 60 : 0));
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -40,6 +42,21 @@ export function ResetPasswordStep({ email, onSuccess }: ResetPasswordStepProps) 
     }
   };
 
+  useEffect(() => {
+    if (secondsLeft <= 0) return;
+    const id = setInterval(() => setSecondsLeft((s) => s - 1), 1000);
+    return () => clearInterval(id);
+  }, [secondsLeft]);
+
+  const handleResend = async () => {
+    try {
+      await reSendOTP(email);
+      setSecondsLeft(60);
+    } catch {
+      // store sets error
+    }
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4" noValidate>
       <div>
@@ -48,6 +65,16 @@ export function ResetPasswordStep({ email, onSuccess }: ResetPasswordStepProps) 
         </p>
         <p className="mb-3 text-xs text-[#9aa6b8]">Sent to {email}</p>
         <OtpInput value={otp} onChange={setOtp} />
+        <div className="flex items-center justify-end mt-2">
+          <button
+            type="button"
+            onClick={handleResend}
+            disabled={secondsLeft > 0 || isLoading}
+            className="text-xs font-semibold text-[#084ba7] hover:underline disabled:opacity-60"
+          >
+            {secondsLeft > 0 ? `Resend code (${secondsLeft}s)` : "Resend code"}
+          </button>
+        </div>
       </div>
 
       <FormField

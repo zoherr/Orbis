@@ -1,6 +1,49 @@
-import { Toaster } from "react-hot-toast";
+"use client";
+
+import { useEffect, useRef } from "react";
+import { Toaster, useToasterStore } from "react-hot-toast";
 
 export function AppToaster() {
+    const audioRef = useRef<HTMLAudioElement | null>(null);
+    const playedToastIdsRef = useRef<Set<string>>(new Set());
+    const { toasts } = useToasterStore();
+
+    useEffect(() => {
+        audioRef.current = new Audio("/sounds/notification.mp3");
+        audioRef.current.preload = "auto";
+
+        return () => {
+            audioRef.current = null;
+            playedToastIdsRef.current.clear();
+        };
+    }, []);
+
+    useEffect(() => {
+        const audio = audioRef.current;
+        if (!audio) {
+            return;
+        }
+
+        const nextVisibleIds = new Set<string>();
+
+        for (const toast of toasts) {
+            if (!toast.visible) {
+                continue;
+            }
+
+            nextVisibleIds.add(toast.id);
+
+            if (!playedToastIdsRef.current.has(toast.id)) {
+                audio.currentTime = 0;
+                void audio.play().catch(() => {
+                    // Ignore autoplay/user-gesture restrictions.
+                });
+            }
+        }
+
+        playedToastIdsRef.current = nextVisibleIds;
+    }, [toasts]);
+
     return (
         <Toaster
             position="top-right"

@@ -34,6 +34,7 @@ interface AuthState {
     isLoading: boolean;
     error: string | null;
     activationToken: string | null;
+    usernameAvailable: boolean
 }
 
 interface AuthActions {
@@ -45,6 +46,8 @@ interface AuthActions {
     changePassword: (oldPassword: string, newPassword: string) => Promise<void>;
     sendForgotPasswordOTP: (email: string) => Promise<void>;
     forgotPassword: (payload: ForgotPasswordPayload) => Promise<void>;
+    checkUsername: (username: string) => Promise<void>;
+    reSendOTP: (email: string) => Promise<void>;
     clearError: () => void;
     reset: () => void;
 }
@@ -60,6 +63,7 @@ const initialState: AuthState = {
     isLoading: false,
     error: null,
     activationToken: null,
+    usernameAvailable: false
 };
 
 const authStore = create<AuthState & AuthActions>((set, get) => ({
@@ -147,7 +151,7 @@ const authStore = create<AuthState & AuthActions>((set, get) => ({
             return data.user;
         } catch (error) {
             const message = getErrorMessage(error);
-            set({ isLoading: false, error: message, user: null, isAuthenticated: false });
+            set({ isLoading: false,  user: null, isAuthenticated: false });
             throw new Error(message);
         }
     },
@@ -205,6 +209,28 @@ const authStore = create<AuthState & AuthActions>((set, get) => ({
             });
 
             set({ isLoading: false, activationToken: null });
+        } catch (error) {
+            const message = getErrorMessage(error);
+            set({ isLoading: false, error: message });
+            throw new Error(message);
+        }
+    },
+    checkUsername: async (username) => {
+        set({ isLoading: true, error: null });
+        try {
+            const { data } = await API.get(`/auth/check-username?username=${username}`);
+            set({ isLoading: false, usernameAvailable: data.available ?? false });
+        } catch (error) {
+            const message = getErrorMessage(error);
+            set({ isLoading: false, error: message });
+            throw new Error(message);
+        }
+    },
+    reSendOTP: async (email) => {
+        set({ isLoading: true, error: null });
+        try {
+            const { data } = await API.post('/auth/resend-otp', { email });
+            set({ isLoading: false, activationToken: data.activationToken ?? null });
         } catch (error) {
             const message = getErrorMessage(error);
             set({ isLoading: false, error: message });

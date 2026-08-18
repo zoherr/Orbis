@@ -1,7 +1,7 @@
 import Unauthorized from "../exceptions/Unauthorized.js";
 import { verifyAccessToken } from "../utils/jwt.js";
 
-const authenticate = async (req, res, next) => {
+export const authenticate = async (req, res, next) => {
     const accessToken = req.cookies?.accessToken;
 
     if (!accessToken) {
@@ -19,4 +19,15 @@ const authenticate = async (req, res, next) => {
     next();
 }
 
-export default authenticate;
+export const checkAuth = async (req, res, next) => {
+    const accessToken = req.cookies?.accessToken;
+
+    if (accessToken) {
+        const payload = verifyAccessToken(accessToken);
+        if (payload) {
+            req.userId = payload.userId;
+        }
+    }
+
+    next();
+}

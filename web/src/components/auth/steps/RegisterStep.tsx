@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import authStore from "@/store/authStore";
 import { FormField } from "../ui/FormField";
 import { OtpInput } from "../ui/OtpInput";
@@ -17,7 +17,9 @@ export function RegisterStep({ email, onSuccess }: RegisterStepProps) {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [fieldError, setFieldError] = useState<string | null>(null);
-  const { register, isLoading, error, clearError } = authStore();
+  const { register, isLoading, error, clearError, checkUsername, usernameAvailable, reSendOTP, activationToken } = authStore();
+
+  const [secondsLeft, setSecondsLeft] = useState<number>(() => (activationToken ? 60 : 0));
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -42,6 +44,30 @@ export function RegisterStep({ email, onSuccess }: RegisterStepProps) {
     }
   };
 
+  useEffect(() => {
+    if (secondsLeft <= 0) return;
+    const id = setInterval(() => setSecondsLeft((s) => s - 1), 1000);
+    return () => clearInterval(id);
+  }, [secondsLeft]);
+
+  // debounce username availability checks
+  useEffect(() => {
+    if (!username || username.length < 5) return;
+    const id = setTimeout(() => {
+      checkUsername(username).catch(() => {});
+    }, 400);
+    return () => clearTimeout(id);
+  }, [username, checkUsername]);
+
+  const handleResend = async () => {
+    try {
+      await reSendOTP(email);
+      setSecondsLeft(60);
+    } catch {
+      // store handles error
+    }
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4" noValidate>
       <div>
@@ -50,6 +76,16 @@ export function RegisterStep({ email, onSuccess }: RegisterStepProps) {
         </p>
         <p className="mb-3 text-xs text-[#9aa6b8]">Sent to {email}</p>
         <OtpInput value={otp} onChange={setOtp} />
+        <div className="flex items-center justify-end mt-2">
+          <button
+            type="button"
+            onClick={handleResend}
+            disabled={secondsLeft > 0 || isLoading}
+            className="text-xs font-semibold text-[#084ba7] hover:underline disabled:opacity-60"
+          >
+            {secondsLeft > 0 ? `Resend code (${secondsLeft}s)` : "Resend code"}
+          </button>
+        </div>
       </div>
 
       <FormField
@@ -75,6 +111,12 @@ export function RegisterStep({ email, onSuccess }: RegisterStepProps) {
         maxLength={20}
         required
       />
+
+      {username && username.length >= 5 && (
+        <p className={`mt-1 text-xs ${usernameAvailable ? "text-green-600" : "text-[#e5484d]"}`}>
+          {usernameAvailable ? "Username available" : "Username already taken"}
+        </p>
+      )}
 
       <div className="grid grid-cols-2 gap-3">
         <FormField
