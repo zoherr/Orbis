@@ -5,6 +5,8 @@ import { changePasswordSchema, checkUsername, forgotPasswordSchema, initiateAuth
 import { authenticate, checkAuth } from "../middlewares/auth.middleware.js"
 import { rateLimiter } from "../middlewares/rateLimit.middleware.js";
 
+// TODO(Zoher): google authentication
+
 const authRoute = Router();
 
 authRoute.post("/init", rateLimiter(15 * 60 * 1000, 10), ValidateSchema(initiateAuthSchema), initiateAuth)

@@ -12,10 +12,14 @@ const transporter = nodemailer.createTransport({
 });
 
 const sendMail = async (options = {}) => {
-    return await transporter.sendMail({
-        from: env.SMTP_FROM || env.SMTP_USER,
-        ...options
-    });
+    const payload = {
+        ...options,
+        from: {
+            name: env.SMTP_FROM,
+            address: env.SMTP_USER
+        }
+    };
+    return await transporter.sendMail(payload);
 };
 
 export default sendMail;
