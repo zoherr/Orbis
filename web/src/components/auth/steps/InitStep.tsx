@@ -9,9 +9,15 @@ interface InitStepProps {
   initialEmail: string;
   onExistingUser: (email: string) => void;
   onNewUser: (email: string) => void;
+  onSuccess: () => void;
 }
 
-export function InitStep({ initialEmail, onExistingUser, onNewUser }: InitStepProps) {
+export function InitStep({
+  initialEmail,
+  onExistingUser,
+  onNewUser,
+  onSuccess,
+}: InitStepProps) {
   const [email, setEmail] = useState(initialEmail);
   const [fieldError, setFieldError] = useState<string | null>(null);
   const { initiateAuth, isLoading, error, clearError } = authStore();
@@ -54,7 +60,9 @@ export function InitStep({ initialEmail, onExistingUser, onNewUser }: InitStepPr
         />
 
         {error && !fieldError && (
-          <p className="rounded-lg bg-[#fdecec] px-3 py-2 text-xs text-[#e5484d]">{error}</p>
+          <p className="rounded-lg bg-[#fdecec] px-3 py-2 text-xs text-[#e5484d]">
+            {error}
+          </p>
         )}
 
         <button
@@ -68,11 +76,13 @@ export function InitStep({ initialEmail, onExistingUser, onNewUser }: InitStepPr
 
       <div className="flex items-center gap-3">
         <div className="h-px flex-1 bg-[#dfe7f3]" />
-        <span className="text-xs uppercase tracking-[0.14em] text-[#9aa6b8]">or</span>
+        <span className="text-xs uppercase tracking-[0.14em] text-[#9aa6b8]">
+          or
+        </span>
         <div className="h-px flex-1 bg-[#dfe7f3]" />
       </div>
 
-      <GoogleButton label="Continue with Google" />
+      <GoogleButton label="Continue with Google" onSuccess={onSuccess} />
     </div>
   );
 }

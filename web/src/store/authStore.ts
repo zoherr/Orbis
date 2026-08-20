@@ -48,6 +48,7 @@ interface AuthActions {
     forgotPassword: (payload: ForgotPasswordPayload) => Promise<void>;
     checkUsername: (username: string) => Promise<void>;
     reSendOTP: (email: string) => Promise<void>;
+    googleLogin: (credential: string) => Promise<User>;
     clearError: () => void;
     reset: () => void;
 }
@@ -151,7 +152,7 @@ const authStore = create<AuthState & AuthActions>((set, get) => ({
             return data.user;
         } catch (error) {
             const message = getErrorMessage(error);
-            set({ isLoading: false,  user: null, isAuthenticated: false });
+            set({ isLoading: false, user: null, isAuthenticated: false });
             throw new Error(message);
         }
     },
@@ -236,8 +237,33 @@ const authStore = create<AuthState & AuthActions>((set, get) => ({
             set({ isLoading: false, error: message });
             throw new Error(message);
         }
-    },
+    }, googleLogin: async (credential) => {
+        set({ isLoading: true, error: null });
 
+        try {
+            const { data } = await API.post("/auth/google", {
+                credential
+            });
+
+            set({
+                user: data.user,
+                isAuthenticated: true,
+                isLoading: false
+            });
+
+            return data.user;
+        } catch (error) {
+            const message = getErrorMessage(error);
+
+            set({
+                isLoading: false,
+                error: message,
+                isAuthenticated: false
+            });
+
+            throw new Error(message);
+        }
+    },
     clearError: () => set({ error: null }),
 
     reset: () => set({ ...initialState }),

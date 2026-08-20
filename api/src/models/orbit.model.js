@@ -12,20 +12,20 @@ const attendeesSchema = new mongoose.Schema({
     }
 });
 
-const meetingSchema = new mongoose.Schema({
+const orbitSchema = new mongoose.Schema({
     title: {
         require: true,
         type: String
     },
-    meetingDate: {
+    orbitDate: {
         type: Date,
         required: true
     },
-    meetingTime: {
+    orbitTime: {
         type: String,
         required: true
     },
-    meetingCode: {
+    orbitCode: {
         type: String,
         require: true,
         unique: true,
@@ -45,6 +45,6 @@ const meetingSchema = new mongoose.Schema({
 });
 
 
-const MeetingModel = mongoose.model("Meeting", meetingSchema);
+const OrbitModel = mongoose.model("Orbit", orbitSchema);
 
-export default MeetingModel;
+export default OrbitModel;

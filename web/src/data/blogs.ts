@@ -13,7 +13,7 @@ export interface BlogPost {
 export const blogPosts: BlogPost[] = [
   {
     slug: "asdsas",
-    title: "How We Design Spaces For Better Meetings",
+    title: "How We Design Spaces For Better Orbits",
     excerpt:
       "A practical look at scheduling rituals, room design, and social signals for 2D metaverse communities.",
     category: "Product",
@@ -22,11 +22,11 @@ export const blogPosts: BlogPost[] = [
     author: "Orbis Team",
     coverGradient: "from-[#ebf4ff] via-white to-[#f2ffd1]",
     content: [
-      "Communities need rhythm. In Orbis, meetings are not just calendar blocks; they are rituals that blend identity, context, and shared intent.",
+      "Communities need rhythm. In Orbis, orbits are not just calendar blocks; they are rituals that blend identity, context, and shared intent.",
       "The most successful spaces pair lightweight scheduling with clear room purpose. A voice room for daily standups should feel very different from one used for launch reviews.",
       "We design for discoverability first. Members should know what is happening now, what starts next, and what they can join with one click.",
       "Static structure creates confidence: recurring events, role-based channels, and visible history make every new member feel oriented.",
-      "As 2D metaverse products evolve, the best meeting UX will feel less like booking software and more like moving through a living neighborhood.",
+      "As 2D metaverse products evolve, the best orbit UX will feel less like booking software and more like moving through a living neighborhood.",
     ],
   },
   {
@@ -40,8 +40,8 @@ export const blogPosts: BlogPost[] = [
     author: "Community Lab",
     coverGradient: "from-[#f2ffd1] via-white to-[#ebf4ff]",
     content: [
-      "Culture scales when defaults are obvious. Welcome flows, recurring sessions, and short meeting notes reduce friction immediately.",
-      "Healthy communities reward contribution with visibility. Meeting highlights and community updates help members feel momentum.",
+      "Culture scales when defaults are obvious. Welcome flows, recurring sessions, and short orbit notes reduce friction immediately.",
+      "Healthy communities reward contribution with visibility. Orbit highlights and community updates help members feel momentum.",
       "Treat each space like a living city block: clear entrances, active zones, and regular events that anchor participation.",
     ],
   },
@@ -49,15 +49,15 @@ export const blogPosts: BlogPost[] = [
     slug: "discord-to-orbis-workflows",
     title: "From Discord Habits To Orbis Workflows",
     excerpt:
-      "Map familiar Discord patterns into richer space-and-meeting workflows built for metaverse teams.",
+      "Map familiar Discord patterns into richer space-and-orbit workflows built for metaverse teams.",
     category: "Guides",
     readTime: "7 min read",
     publishedAt: "Aug 04, 2026",
     author: "Orbis Team",
     coverGradient: "from-[#eef2ff] via-white to-[#ebf4ff]",
     content: [
-      "People already understand channels, rooms, and roles. Orbis extends those habits with spatial context and meeting-first dashboards.",
-      "The goal is continuity, not novelty. Preserve what works, then add richer meeting flows and clearer community navigation.",
+      "People already understand channels, rooms, and roles. Orbis extends those habits with spatial context and orbit-first dashboards.",
+      "The goal is continuity, not novelty. Preserve what works, then add richer orbit flows and clearer community navigation.",
       "When migration feels familiar, adoption is faster and teams keep their social energy intact.",
     ],
   },

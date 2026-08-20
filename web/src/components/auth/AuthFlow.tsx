@@ -92,6 +92,7 @@ export function AuthFlow() {
             setEmail(userEmail);
             setStep("register");
           }}
+          onSuccess={goToApp}
         />
       )}
 

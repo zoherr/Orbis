@@ -12,6 +12,7 @@ import {
     userForgotPassword,
     invalidateRefreshToken,
     checkUserNameAvailablity,
+    loginWithGoogle
 } from "../services/auth.service.js";
 import { signAccessToken } from "../utils/jwt.js";
 import { toPublicUser } from "../dtos/user.dto.js";
@@ -341,3 +342,41 @@ export const reSendOTP = async (req, res, next) => {
         next(error);
     }
 }
+
+export const googleLogin = async (req, res, next) => {
+    try {
+        const { credential } = req.body;
+
+        if (!credential) {
+            throw new BadRequest("Google credential is required");
+        }
+
+        const { user, refreshToken } = await loginWithGoogle(credential);
+
+        const accessToken = signAccessToken({
+            userId: user._id.toString(),
+        });
+
+        res.cookie("accessToken", accessToken, {
+            httpOnly: true,
+            secure: env.NODE_ENV === "production",
+            sameSite: "strict",
+            maxAge: 15 * 60 * 1000,
+        });
+
+        res.cookie("refreshToken", refreshToken, {
+            httpOnly: true,
+            secure: env.NODE_ENV === "production",
+            sameSite: "strict",
+            maxAge: 7 * 24 * 60 * 60 * 1000,
+        });
+
+        return res.status(200).json({
+            success: true,
+            message: "Google Login Successfully!",
+            user: toPublicUser(user),
+        });
+    } catch (error) {
+        next(error);
+    }
+};

@@ -27,7 +27,7 @@ export default function BlogsPage() {
           Stories from the frontier of digital connection.
         </h1>
         <p className="text-lg leading-8 text-[#46536a]">
-          Product notes, community experiments, and practical frameworks for meetings, rituals, and social identity in a modern workspace.
+          Product notes, community experiments, and practical frameworks for orbits, rituals, and social identity in a modern workspace.
         </p>
       </div>
 
