@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "react-hot-toast";
 import { useAppAuth } from "@/components/providers/AppAuthProvider";
 import authStore from "@/store/authStore";
@@ -11,7 +11,16 @@ export function OrbisHeader() {
   const { user, isAuthenticated } = useAppAuth();
   const logout = authStore((state) => state.logout);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const firstName = user?.fullName?.trim().split(/\s+/)[0] ?? "Orbit";
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -24,8 +33,18 @@ export function OrbisHeader() {
   };
 
   return (
-    <header className="relative z-50 mx-auto max-w-7xl px-5 pb-4 pt-6 sm:px-8 lg:px-10">
-      <div className="flex items-center justify-between rounded-full border border-[#dfe7f3] bg-white/80 px-5 py-3 shadow-[0_10px_30px_rgba(8,75,167,0.05)] backdrop-blur-sm">
+    <header 
+      className={`fixed top-0 z-50 w-full transition-all duration-300 ${
+        scrolled ? "pt-3 pb-3 px-5 sm:px-8 lg:px-10" : "pt-0 pb-0 px-0"
+      }`}
+    >
+      <div 
+        className={`mx-auto flex items-center justify-between transition-all duration-300 ${
+          scrolled 
+            ? "max-w-6xl rounded-full border border-[#dfe7f3]/60 bg-white/90 px-6 py-3 shadow-[0_8px_30px_rgba(8,75,167,0.08)] backdrop-blur-md" 
+            : "max-w-full rounded-none border-b border-[#dfe7f3]/30 bg-white/50 px-6 py-4 backdrop-blur-sm"
+        }`}
+      >
         <Link href="/" className="flex items-center gap-3">
           <Image
             src="/logo.png"
@@ -63,11 +82,11 @@ export function OrbisHeader() {
             {menuOpen && (
               <div className="pointer-events-auto absolute right-0 z-50 mt-2 w-40 overflow-hidden rounded-2xl border border-[#dfe7f3] bg-white/95 p-1 shadow-[0_20px_50px_rgba(8,75,167,0.12)] backdrop-blur-md">
                 <Link
-                  href="/orbit"
+                  href="/spaces"
                   onClick={() => setMenuOpen(false)}
                   className="block rounded-xl px-3 py-2 text-sm font-medium text-[#0d172a] transition hover:bg-[#eef6ff] hover:text-[#084ba7]"
                 >
-                  Orbit
+                  Spaces
                 </Link>
                 <button
                   type="button"

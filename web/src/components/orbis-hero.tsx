@@ -47,17 +47,12 @@ export function OrbisHero() {
   return (
     <section
       ref={rootRef}
-      className="relative mx-auto max-w-7xl px-5 pb-20 pt-6 sm:px-8 lg:px-10"
+      className="relative mx-auto max-w-7xl px-5 pb-20 pt-6 mt-15 sm:px-8 lg:px-10"
     >
       <div className="absolute inset-x-0 top-0 -z-10 h-[600px] bg-[radial-gradient(circle_at_top,#edf5ff_0%,#f7f7f4_52%,#f7f7f4_100%)]" />
 
       <div className="grid items-center gap-12 pb-8 pt-8 lg:grid-cols-[1.08fr_0.92fr] lg:pt-16">
         <div className="relative">
-          <div className="gsap-hero-item mb-5 inline-flex items-center gap-2 rounded-full border border-[#5fa3ff]/35 bg-[#ebf4ff] px-3 py-1.5 text-xs font-medium tracking-[0.18em] text-[#084ba7] uppercase">
-            <span className="h-2 w-2 rounded-full bg-[#d3f625] shadow-[0_0_12px_rgba(211,246,37,0.8)]" />
-            social space platform
-          </div>
-
           <h1 className="gsap-hero-item max-w-[750px] text-[clamp(3.5rem,7vw,8rem)] font-medium leading-[0.8] tracking-[-0.06em] text-[#0d172a]">
             <span className="block text-[0.65em]">Create Your Space.</span>
             <span className="mt-5 block text-[0.9em] text-[#084ba7] italic" style={{ fontFamily: '"FC Fast", sans-serif' }}>
