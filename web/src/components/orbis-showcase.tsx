@@ -83,7 +83,7 @@ export function OrbisShowcase() {
         <div className="showcase-fade grid items-center gap-12 lg:grid-cols-2">
           <div>
             <div className="inline-flex rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] bg-[#ebf4ff] text-[#084ba7]">
-              Meetings & Rituals
+              Orbits & Rituals
             </div>
             <h3 className="mt-6 text-3xl font-medium tracking-[-0.04em] text-[#0d172a] sm:text-4xl">
               Schedule sessions that people actually join
@@ -92,7 +92,7 @@ export function OrbisShowcase() {
               From standups to townhalls, run recurring experiences with clear timing, context, and ownership.
             </p>
             <ul className="mt-8 space-y-4">
-              {['One-click calendar integration', 'Persistent chat history', 'Automated meeting notes'].map((item, i) => (
+              {['One-click calendar integration', 'Persistent chat history', 'Automated orbit notes'].map((item, i) => (
                 <li key={i} className="flex items-center gap-3 text-base text-[#2c3a4f]">
                   <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#ebf4ff] text-[#084ba7] text-xs">✓</span>
                   {item}

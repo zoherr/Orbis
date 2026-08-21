@@ -9,7 +9,7 @@ const startServer = async () => {
     try {
         await connectRabbitMQ();
         await connectDb()
-        app.listen(env.PORT, () => {
+        app.listen(env.PORT,"0.0.0.0", () => {
             console.log(`SERVER IS RUNNING ON PORT:${env.PORT}`);
         });
     } catch (error) {

@@ -8,13 +8,16 @@ const env = {
     DATABASE_URL: process.env.DATABASE_URL,
     SMTP_HOST: process.env.SMTP_HOST,
     SMTP_PORT: process.env.SMTP_PORT,
+    SMTP_FROM: process.env.SMTP_FROM,
     SMTP_USER: process.env.SMTP_USER,
     SMTP_PASS: process.env.SMTP_PASS,
     SMTP_SECURE: process.env.SMTP_SECURE,
     RABBITMQ_URL: process.env.RABBITMQ_URL,
     JWT_SECRET: process.env.JWT_SECRET,
     JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET,
-    CORS_FRONTNED_URL: process.env.CORS_FRONTNED_URL
+    CORS_FRONTNED_URL: process.env.CORS_FRONTNED_URL,
+    GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
+    GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET
 }
 
 export default env;

@@ -26,7 +26,7 @@ export function Modal({ open, onClose, title, description, children, maxWidth = 
     if (!open) return null;
 
     return (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[70] flex items-start justify-center pt-20 p-4">
             <div className="absolute inset-0 animate-orbis-fade-in bg-[#0d172a]/50 backdrop-blur-sm" onClick={onClose} />
             <div
                 role="dialog"

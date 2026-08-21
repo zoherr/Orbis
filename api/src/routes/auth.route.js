@@ -1,9 +1,11 @@
 import { Router } from "express";
-import { userRegister, userLogin, initiateAuth, refreshAccessToken, getMe, changePassword, sendForgotPasswordOTP, forgotPassword, logout, checkUserNameAvailable, reSendOTP } from "../controllers/auth.controller.js";
+import { userRegister, userLogin, initiateAuth, refreshAccessToken, getMe, changePassword, sendForgotPasswordOTP, forgotPassword, logout, checkUserNameAvailable, reSendOTP, googleLogin } from "../controllers/auth.controller.js";
 import { ValidateSchema } from "../middlewares/validation.middleware.js";
 import { changePasswordSchema, checkUsername, forgotPasswordSchema, initiateAuthSchema, loginUserSchema, registerUserSchema, resendOTPSchema, sendForgotPasswordOTPSchema } from "../validations/auth.validation.js";
 import { authenticate, checkAuth } from "../middlewares/auth.middleware.js"
 import { rateLimiter } from "../middlewares/rateLimit.middleware.js";
+
+// TODO(Zoher): google authentication
 
 const authRoute = Router();
 
@@ -18,5 +20,6 @@ authRoute.post("/forgot-password-otp", ValidateSchema(sendForgotPasswordOTPSchem
 authRoute.post("/forgot-password", ValidateSchema(forgotPasswordSchema), forgotPassword);
 authRoute.get("/check-username", checkAuth, checkUserNameAvailable);
 authRoute.post("/resend-otp", rateLimiter(15 * 60 * 1000, 10), ValidateSchema(resendOTPSchema), reSendOTP);
+authRoute.post("/google", googleLogin);
 
 export default authRoute;

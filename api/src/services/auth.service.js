@@ -16,13 +16,39 @@ import bcrypt from "bcryptjs";
 import { deleteRedis, getRedis, setRedis } from "../utils/redis.js";
 import BadRequest from "../exceptions/BadRequest.js";
 import RateLimitException from "../exceptions/RateLimit.js";
+import { OAuth2Client } from "google-auth-library";
+import env from "../config/env.config.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const REFRESH_TOKEN_TTL = 7 * 24 * 60 * 60;
+const googleClient = new OAuth2Client(env.GOOGLE_CLIENT_ID);
 
 const hashToken = (token) => {
     return crypto.createHash("sha256").update(token).digest("hex");
+};
+
+
+export const verifyGoogleToken = async (token) => {
+    const ticket = await googleClient.verifyIdToken({
+        idToken: token,
+        audience: env.GOOGLE_CLIENT_ID
+    });
+
+    return ticket.getPayload();
+};
+
+const generateUsername = async (email) => {
+    const baseUsername = email.split("@")[0].toLowerCase();
+    let username = baseUsername;
+    let counter = 1;
+
+    while (await checkUserName(username)) {
+        username = `${baseUsername}${counter}`;
+        counter++;
+    }
+
+    return username;
 };
 
 const createRefreshSession = async (userId) => {
@@ -290,4 +316,51 @@ export const checkUserNameAvailablity = async (username, userid) => {
     const user = await UserModel.findOne(query).select("_id").lean();
 
     return !!user;
+};
+
+export const loginWithGoogle = async (credential) => {
+    const googleUser = await verifyGoogleToken(credential);
+
+    const {
+        sub: googleUserId,
+        email,
+        email_verified,
+        name: fullName,
+        picture: profileImage
+    } = googleUser;
+
+    if (!email_verified) {
+        throw new BadRequest("Google email is not verified");
+    }
+
+    let user = await UserModel.findOne({ email });
+
+    if (!user) {
+        const username = await generateUsername(email);
+
+        user = await UserModel.create({
+            fullName,
+            username,
+            email,
+            googleUserId,
+            profileImage
+        });
+    } else {
+        if (!user.googleUserId) {
+            user.googleUserId = googleUserId;
+        }
+
+        if (!user.profileImage && profileImage) {
+            user.profileImage = profileImage;
+        }
+
+        await user.save();
+    }
+
+    const refreshToken = await createRefreshSession(user._id);
+
+    return {
+        user,
+        refreshToken
+    };
 };
