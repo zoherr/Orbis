@@ -45,6 +45,7 @@ export const create = async (data, userId) => {
         title: data.title,
         orbitDate: data.orbitDate,
         orbitTime: data.orbitTime,
+        type: data.type,
         orbitCode,
         admins: [userId],
         attendees: [],
@@ -82,7 +83,8 @@ export const getAllOrbitByUserID = async (userId) => {
                         title: "$title",
                         orbitCode: "$orbitCode",
                         orbitDate: "$orbitDate",
-                        orbitTime: "$orbitTime"
+                        orbitTime: "$orbitTime",
+                        type: "$type"
                     }
                 }
             }
@@ -112,7 +114,8 @@ export const update = async (data) => {
             $set: {
                 title: data.title,
                 orbitDate: data.orbitDate,
-                orbitTime: data.orbitTime
+                orbitTime: data.orbitTime,
+                type: data.type
             }
         },
         {
@@ -190,6 +193,7 @@ export const getRecentJoinedOrbits = async (userId) => {
                         orbitCode: "$orbitCode",
                         orbitDate: "$orbitDate",
                         orbitTime: "$orbitTime",
+                        type: "$type",
                         joinTime: "$attendees.joinTime"
                     }
                 }

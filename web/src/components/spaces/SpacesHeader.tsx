@@ -26,7 +26,6 @@ export function SpacesHeader({ onJoinOpen, onCreateOpen }: SpacesHeaderProps) {
         <header className="flex h-[80px] shrink-0 items-center justify-between px-6 lg:px-16 bg-[#f7f7f4]">
             <div className="flex items-center gap-3">
                 <img src="/logo.png" alt="Orbis Logo" className="h-10 w-auto object-contain" />
-                <span className="text-xl font-bold text-[#0d172a] tracking-tight">My Space</span>
             </div>
 
             <div className="flex items-center gap-4">
@@ -41,7 +40,7 @@ export function SpacesHeader({ onJoinOpen, onCreateOpen }: SpacesHeaderProps) {
                 
                 <div className="group relative">
                     <div className="flex items-center gap-3 cursor-pointer p-1 rounded-full hover:bg-black/5 transition">
-                        <div className="flex flex-col items-end">
+                        <div className="hidden sm:flex flex-col items-end">
                             <span className="text-sm font-bold text-[#0d172a]">{user?.fullName || "Astronaut"}</span>
                             <span className="text-[10px] uppercase font-bold tracking-wider text-[#6a7892]">Online</span>
                         </div>

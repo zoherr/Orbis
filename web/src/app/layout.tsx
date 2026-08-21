@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import { AppToaster } from "@/components/AppToaster";
@@ -30,6 +30,13 @@ const graphik = localFont({
   variable: "--font-graphik",
   display: "swap",
 });
+
+export const viewport: Viewport = {
+  themeColor: "#0d172a",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://orbis.space"),
@@ -75,10 +82,21 @@ export const metadata: Metadata = {
     images: ["/logo.png"],
   },
   icons: {
-    icon: "/logo.png",
+    icon: [
+      { url: "/logo.png", type: "image/png" },
+    ],
     shortcut: "/logo.png",
-    apple: "/logo.png",
+    apple: [
+      { url: "/logo.png", sizes: "180x180", type: "image/png" },
+    ],
+    other: [
+      {
+        rel: "apple-touch-icon-precomposed",
+        url: "/logo.png",
+      },
+    ],
   },
+  manifest: "/manifest.json",
   alternates: {
     canonical: "/",
   },
@@ -89,6 +107,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="en"
       className={`${graphik.variable} h-full antialiased`}
+      data-scroll-behavior="smooth"
     >
       <body className="min-h-full bg-[#f7f7f4] text-[#0d172a]">
         <AppAuthProvider>

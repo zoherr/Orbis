@@ -47,7 +47,7 @@ export function AuthFlow() {
 
   const goToApp = () => {
     toast.success("You’re in. Welcome to Orbis.");
-    router.push("/");
+    router.push("/spaces");
   };
 
   const { eyebrow, title, subtitle } = COPY[step];

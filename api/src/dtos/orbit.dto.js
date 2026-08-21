@@ -5,6 +5,7 @@ export const toPublicOrbit = (orbit) => {
         code: orbit.orbitCode,
         date: orbit.orbitDate,
         time: orbit.orbitTime,
+        type: orbit.type,
         ...(orbit.joinTime && {
             joinTime: orbit.joinTime
         })

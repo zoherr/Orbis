@@ -6,7 +6,8 @@ export const orbitCreateSchema = z.object({
     orbitTime: z
         .string()
         .regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Invalid time")
-        .optional() // 09:30, 18:30
+        .optional(), // 09:30, 18:30
+    type: z.enum(["instant", "scheduled"])
 });
 
 export const orbitUpdateSchema = z.object({
@@ -16,7 +17,8 @@ export const orbitUpdateSchema = z.object({
     orbitTime: z
         .string()
         .regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Invalid time")
-        .optional() // 09:30, 18:30
+        .optional(), // 09:30, 18:30
+    type: z.enum(["instant", "scheduled"]).optional()
 });
 
 

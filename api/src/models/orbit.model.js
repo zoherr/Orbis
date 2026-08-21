@@ -25,6 +25,12 @@ const orbitSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    type: {
+        type: String,
+        enum: ["instant", "scheduled"],
+        required: true,
+        default: "scheduled"
+    },
     orbitCode: {
         type: String,
         require: true,

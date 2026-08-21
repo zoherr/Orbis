@@ -8,6 +8,7 @@ export interface Orbit {
     code: string;
     date?: string;
     time?: string;
+    type?: "instant" | "scheduled";
     joinTime?: string;
 }
 
@@ -25,6 +26,7 @@ interface CreateOrbitPayload {
     title: string;
     orbitDate?: string;
     orbitTime?: string;
+    type: "instant" | "scheduled";
 }
 
 interface UpdateOrbitPayload {
@@ -32,6 +34,7 @@ interface UpdateOrbitPayload {
     title: string;
     orbitDate?: string;
     orbitTime?: string;
+    type?: "instant" | "scheduled";
 }
 
 interface JoinOrbitPayload {
