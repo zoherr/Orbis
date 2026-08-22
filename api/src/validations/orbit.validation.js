@@ -23,5 +23,5 @@ export const orbitUpdateSchema = z.object({
 
 
 export const orbitJoinSchema = z.object({
-    orbitCode : z.string().min(8).max(8)
+    id : z.string()
 })

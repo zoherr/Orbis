@@ -1,10 +1,11 @@
 "use client";
 
 import { useMemo, useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import {
     FiPlus, FiHash, FiCalendar, FiClock, FiVideo, FiEdit2,
-    FiCopy, FiZap, FiArrowUpRight, FiLink, FiChevronLeft, FiChevronRight
+    FiCopy, FiZap, FiArrowUpRight, FiLink, FiChevronLeft, FiChevronRight, FiHome
 } from "react-icons/fi";
 import { Modal } from "@/components/ui/Modal";
 import { SpacesHeader } from "@/components/spaces/SpacesHeader";
@@ -21,7 +22,8 @@ type Mode = "now" | "scheduled";
 
 /* ----------------------------------- Page ----------------------------------- */
 export default function OrbitsPage() {
-    const { orbits, recentJoinedOrbits, getMyOrbits, getRecentJoinedOrbits, createOrbit, joinOrbit, updateOrbit, isLoading } = orbitStore();
+    const { orbits, recentJoinedOrbits, getMyOrbits, getRecentJoinedOrbits, createOrbit, updateOrbit, isLoading } = orbitStore();
+    const router = useRouter();
     
     const [isCreateOpen, setIsCreateOpen] = useState(false);
     const [isJoinOpen, setIsJoinOpen] = useState(false);
@@ -74,9 +76,7 @@ export default function OrbitsPage() {
 
     const handleJoin = async (code: string) => {
         try {
-            await joinOrbit({ orbitCode: code });
-            toast.success(`Joined orbit ${code}`);
-            getRecentJoinedOrbits();
+            router.push(`/join/${code}`);
         } catch (error: any) {
             toast.error(error.message || "Failed to join orbit");
         }
@@ -96,15 +96,7 @@ export default function OrbitsPage() {
         <div className="h-screen overflow-hidden flex flex-col bg-[#f7f7f4] font-sans">
             <SpacesHeader onJoinOpen={() => setIsJoinOpen(true)} onCreateOpen={() => setIsCreateOpen(true)} />
 
-            <main className="mx-auto w-full max-w-[90rem] px-6 pt-2 pb-6 lg:pt-4 lg:pb-10 lg:px-12 flex-1 flex flex-col overflow-hidden">
-                <div className="mb-6 lg:mb-10 sm:hidden flex gap-3 shrink-0">
-                    <button onClick={() => setIsJoinOpen(true)} className="flex flex-1 items-center justify-center gap-2 rounded-full border border-[#dfe7f3] bg-white px-4 py-3 text-sm font-semibold text-[#0d172a]">
-                        Join
-                    </button>
-                    <button onClick={() => setIsCreateOpen(true)} className="flex flex-1 items-center justify-center gap-2 rounded-full bg-[#d3f625] px-4 py-3 text-sm font-bold text-[#0d172a]">
-                        New Orbit
-                    </button>
-                </div>
+            <main className="mx-auto w-full max-w-[90rem] px-6 pt-2 pb-24 lg:pt-4 lg:pb-10 lg:px-12 flex-1 flex flex-col overflow-hidden">
 
                 {isLoading && flatMyOrbits.length === 0 ? (
                     <div className="flex items-center justify-center py-20">
@@ -157,6 +149,23 @@ export default function OrbitsPage() {
                     </div>
                 )}
             </main>
+
+            {/* Mobile Navigation Footer */}
+            <nav className="sm:hidden fixed bottom-0 left-0 right-0 z-50 flex h-[72px] items-center justify-around bg-white/90 backdrop-blur-xl border-t border-[#dfe7f3] px-2 pb-safe shadow-[0_-10px_30px_rgba(8,75,167,0.06)]">
+                <button className="flex flex-col items-center justify-center gap-1 text-[#084ba7] w-20">
+                    <FiHome size={22} />
+                    <span className="text-[10px] font-bold mt-0.5">Spaces</span>
+                </button>
+                <button onClick={() => setIsCreateOpen(true)} className="flex flex-col items-center justify-center -mt-6">
+                    <div className="mb-8 flex h-16 w-16 items-center justify-center rounded-full bg-[#d3f625] text-[#0d172a] shadow-[0_8px_16px_rgba(211,246,37,0.4)] transition active:scale-95">
+                        <FiPlus size={28} />
+                    </div>
+                </button>
+                <button onClick={() => setIsJoinOpen(true)} className="flex flex-col items-center justify-center gap-1 text-[#6a7892] hover:text-[#0d172a] transition w-20">
+                    <FiHash size={22} />
+                    <span className="text-[10px] font-semibold mt-0.5">Join</span>
+                </button>
+            </nav>
 
             <CreateOrbitModal open={isCreateOpen} onClose={() => setIsCreateOpen(false)} onCreate={handleCreate} />
             <JoinOrbitModal open={isJoinOpen} onClose={() => setIsJoinOpen(false)} onJoin={handleJoin} />

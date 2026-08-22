@@ -3,13 +3,21 @@ import OrbitModel from "../models/orbit.model.js";
 import mongoose from "mongoose";
 import NotFound from "../exceptions/NotFound.js";
 
-const checkOrbitCodeExist = async (code) => {
+export const checkOrbitCodeExist = async (code) => {
     const orbit = await OrbitModel
         .findOne({ orbitCode: code })
         .select("_id")
         .lean();
 
     return !!orbit;
+};
+
+export const checkOrbitCode = async (code) => {
+    const orbit = await OrbitModel
+        .findOne({ orbitCode: code })
+        .select("_id title orbitCode orbitDate orbitTime type");
+
+    return orbit;
 };
 
 const checkOrbitExist = async (_id) => {
@@ -106,7 +114,6 @@ export const getAllOrbitByUserID = async (userId) => {
     return orbits;
 };
 
-
 export const update = async (data) => {
     const orbit = await OrbitModel.findByIdAndUpdate(
         data._id,
@@ -131,9 +138,16 @@ export const update = async (data) => {
     return orbit;
 };
 
+export const checkOrbitById = async (id) => {
+    const orbit = await OrbitModel
+        .findById(id)
+        .select("_id title orbitCode orbitDate orbitTime type");
 
-export const joinOrbit = async (orbitCode, userId) => {
-    const orbit = await OrbitModel.findOne({ orbitCode });
+    return orbit;
+};
+
+export const joinOrbit = async (id, userId) => {
+    const orbit = await OrbitModel.findById(id);
 
     if (!orbit) {
         throw new NotFound("Orbit not found");

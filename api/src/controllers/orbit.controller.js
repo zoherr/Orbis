@@ -1,5 +1,7 @@
 import { toPublicOrbit } from "../dtos/orbit.dto.js";
 import * as orbitService from "../services/orbit.service.js";
+import NotFound from "../exceptions/NotFound.js";
+import mongoose from "mongoose";
 
 export const createOrbit = async (req, res, next) => {
     try {
@@ -51,10 +53,12 @@ export const updateOrbit = async (req, res, next) => {
 
 export const joinOrbit = async (req, res, next) => {
     try {
-        const { orbitCode } = req.body;
+        const { id } = req.body;
+        if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+            throw new NotFound("Invalid Orbit");
+        }
         const userId = req.userId;
-        const code = orbitCode.toLowerCase();
-        const orbit = await orbitService.joinOrbit(code, userId);
+        const orbit = await orbitService.joinOrbit(id, userId);
 
         return res.json({
             success: true,
@@ -65,7 +69,6 @@ export const joinOrbit = async (req, res, next) => {
         next(error);
     }
 };
-
 
 export const getRecentJoinedOrbits = async (req, res, next) => {
     try {
@@ -82,6 +85,32 @@ export const getRecentJoinedOrbits = async (req, res, next) => {
             success: true,
             message: "Recent joined Orbits fetched successfully!",
             data: orbitsRes
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const orbitCodeVerify = async (req, res, next) => {
+    try {
+        const { code } = req.params;
+
+        if (!code || code.length !== 8) {
+            throw new NotFound("Invalid Orbit Code");
+        }
+
+        const orbitCode = code.toLowerCase();
+
+        const orbit = await orbitService.checkOrbitCode(orbitCode);
+
+        if (!orbit) {
+            throw new NotFound("Orbit Not Found");
+        }
+
+        return res.json({
+            success: true,
+            message: "Orbit Fetch Successfully!",
+            data: toPublicOrbit(orbit)
         });
     } catch (error) {
         next(error);

@@ -38,12 +38,13 @@ interface UpdateOrbitPayload {
 }
 
 interface JoinOrbitPayload {
-    orbitCode: string;
+    id: string;
 }
 
 interface OrbitState {
     orbits: OrbitGroup[];
     recentJoinedOrbits: OrbitGroup[];
+    currentOrbit: Orbit | null;
     isLoading: boolean;
     error: string | null;
 }
@@ -53,7 +54,8 @@ interface OrbitActions {
     getMyOrbits: () => Promise<OrbitGroup[]>;
     getRecentJoinedOrbits: () => Promise<OrbitGroup[]>;
     updateOrbit: (payload: UpdateOrbitPayload) => Promise<Orbit>;
-    joinOrbit: (payload: JoinOrbitPayload) => Promise<void>;
+    joinOrbit: (payload: JoinOrbitPayload) => Promise<Orbit>;
+    verifyOrbitCode: (code: string) => Promise<Orbit>;
     clearError: () => void;
     reset: () => void;
 }
@@ -66,6 +68,7 @@ const getErrorMessage = (error: unknown): string => {
 const initialState: OrbitState = {
     orbits: [],
     recentJoinedOrbits: [],
+    currentOrbit: null,
     isLoading: false,
     error: null,
 };
@@ -134,8 +137,21 @@ const orbitStore = create<OrbitState & OrbitActions>((set, get) => ({
     joinOrbit: async (payload) => {
         set({ isLoading: true, error: null });
         try {
-            await API.post('/orbit/join', payload);
-            set({ isLoading: false });
+            const { data } = await API.post('/orbit/join', payload);
+            set({ isLoading: false, currentOrbit: data.data });
+            return data.data;
+        } catch (error) {
+            const message = getErrorMessage(error);
+            set({ isLoading: false, error: message });
+            throw new Error(message);
+        }
+    },
+    verifyOrbitCode: async (code) => {
+        set({ isLoading: true, error: null });
+        try {
+            const { data } = await API.get(`/orbit/verify/${code}`);
+            set({ isLoading: false, currentOrbit: data.data });
+            return data.data;
         } catch (error) {
             const message = getErrorMessage(error);
             set({ isLoading: false, error: message });
