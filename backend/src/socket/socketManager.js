@@ -5,49 +5,78 @@
 
 class SocketManager {
     constructor() {
-        // Map to store connected clients. 
-        // Example: Key could be userId, Value could be the WebSocket instance.
         this.clients = new Map();
+        this.rooms = new Map();
     }
 
-    /**
-     * Add a new connection
-     * @param {string} clientId - Unique identifier for the client (e.g., userId)
-     * @param {WebSocket} ws - The WebSocket connection instance
-     */
     addClient(clientId, ws) {
         this.clients.set(clientId, ws);
     }
 
-    /**
-     * Remove a connection
-     * @param {string} clientId - Unique identifier for the client
-     */
     removeClient(clientId) {
         this.clients.delete(clientId);
+        const removedFromRooms = [];
+        for (const [roomId, clients] of this.rooms.entries()) {
+            if (clients.has(clientId)) {
+                clients.delete(clientId);
+                removedFromRooms.push(roomId);
+                if (clients.size === 0) {
+                    this.rooms.delete(roomId);
+                }
+            }
+        }
+        return removedFromRooms;
     }
 
-    /**
-     * Send a message to a specific client
-     * @param {string} clientId - Unique identifier for the client
-     * @param {object} message - The message object to send
-     */
+    getRoomMembers(roomId) {
+        const room = this.rooms.get(roomId);
+        return room ? Array.from(room) : [];
+    }
+
     sendToClient(clientId, message) {
         const ws = this.clients.get(clientId);
-        if (ws && ws.readyState === 1) { // 1 means OPEN
+        if (ws && ws.readyState === 1) {
             ws.send(JSON.stringify(message));
         }
     }
 
-    /**
-     * Broadcast a message to all connected clients
-     * @param {object} message - The message object to broadcast
-     */
     broadcast(message) {
         const messageString = JSON.stringify(message);
         for (const [clientId, ws] of this.clients.entries()) {
-            if (ws.readyState === 1) { // 1 means OPEN
+            if (ws.readyState === 1) {
                 ws.send(messageString);
+            }
+        }
+    }
+
+    joinRoom(clientId, roomId) {
+        if (!this.rooms.has(roomId)) {
+            this.rooms.set(roomId, new Set());
+        }
+        this.rooms.get(roomId).add(clientId);
+    }
+
+    leaveRoom(clientId, roomId) {
+        const room = this.rooms.get(roomId);
+        if (room) {
+            room.delete(clientId);
+            if (room.size === 0) {
+                this.rooms.delete(roomId);
+            }
+        }
+    }
+
+    broadcastToRoom(roomId, message, excludeClientId = null) {
+        const room = this.rooms.get(roomId);
+        if (!room) return;
+
+        const messageString = JSON.stringify(message);
+        for (const clientId of room) {
+            if (clientId !== excludeClientId) {
+                const ws = this.clients.get(clientId);
+                if (ws && ws.readyState === 1) {
+                    ws.send(messageString);
+                }
             }
         }
     }

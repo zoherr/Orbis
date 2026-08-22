@@ -74,10 +74,25 @@ export const consumeQueue = async (queueName, callback) => {
 
 export const getChannel = () => channel;
 
+export const disconnectRabbitMQ = async () => {
+    try {
+        if (channel) {
+            await channel.close();
+        }
+        if (connection) {
+            await connection.close();
+        }
+        console.log("RabbitMQ disconnected");
+    } catch (error) {
+        console.error("RabbitMQ disconnect error:", error);
+    }
+};
+
 export default {
     connectRabbitMQ,
     createQueue,
     sendToQueue,
     consumeQueue,
-    getChannel
+    getChannel,
+    disconnectRabbitMQ
 };

@@ -20,11 +20,16 @@ export const handleChatMessage = (ws, payload, clientId) => {
         type: 'CHAT_MESSAGE',
         data: {
             senderId: clientId,
+            senderName: payload.senderName || `User ${clientId.substring(0, 4)}`,
             text: payload.text || '',
             timestamp: new Date().toISOString()
         }
     };
 
-    // Broadcast to everyone (or use socketManager.sendToClient to send to a specific user)
-    socketManager.broadcast(responseMessage);
+    // Broadcast to the specific orbit if provided, otherwise fallback to global broadcast
+    if (payload.orbitId) {
+        socketManager.broadcastToRoom(payload.orbitId, responseMessage);
+    } else {
+        socketManager.broadcast(responseMessage);
+    }
 };
